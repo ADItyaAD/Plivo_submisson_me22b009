@@ -1,97 +1,117 @@
-📘 PII Named Entity Recognition (NER)
-(Me22b009)
+# 📘 PII Named Entity Recognition (NER) — *Me22b009*
 
-A lightweight, production-oriented Named Entity Recognition model fine-tuned for detecting Personally Identifiable Information (PII) such as emails, phone numbers, credit card numbers, names, dates, and city names.
+A lightweight, production-ready **Named Entity Recognition (NER)** system fine-tuned to detect **Personally Identifiable Information (PII)** such as:
 
-This repository contains:
+- Emails  
+- Phone Numbers  
+- Credit Card Numbers  
+- Dates  
+- Person Names  
+- City Names  
 
-Training pipeline
+Designed for **real-time PII-redaction pipelines** used in customer support, KYC, enterprise compliance, and call-center transcription.
 
-Evaluation scripts
+---
 
-Inference API
+## 🔍 Overview
 
-Model analysis & metrics
+This project fine-tunes **`prajjwal1/bert-small`** for **token-level BIO tagging**.  
+The training pipeline is optimized for:
 
-Final results
+- **Low latency**
+- **Small footprint**
+- **Fast convergence**
+- **High accuracy on PII tags**
 
-🔍 Overview
+---
 
-This project fine-tunes prajjwal1/bert-small for token-level BIO tagging of PII entities.
-The model is optimized for speed, low latency, and high accuracy, making it suitable for realtime PII-redaction systems used in:
+## 🧩 Model Architecture
 
-Customer support chatbots
+| Component | Details |
+|----------|---------|
+| Base Model | `prajjwal1/bert-small` |
+| Task | Token Classification (BIO tagging) |
+| Max Sequence Length | 128 |
+| Frozen Layers | All encoder layers except **last 2** |
+| Trainable | Last 2 transformer blocks + classifier head |
+| Loss Function | Weighted CrossEntropy |
+| Dataset Format | JSONL with PII annotation |
+| Gradient Checkpointing | Enabled |
+| Device | Auto GPU |
 
-Phone transcription pipelines
+---
 
-Enterprise compliance systems
+## 🎯 Class Weights (PII-Focused)
 
-Financial/KYC workflows
+| Entity | Weight |
+|--------|--------|
+| CREDIT_CARD | **5.0** |
+| PHONE | **4.0** |
+| EMAIL | **4.0** |
+| PERSON_NAME | **3.0** |
+| DATE | **2.0** |
+| CITY | **1.5** |
+| LOCATION | **1.2** |
+| O (non-PII) | **1.0** |
 
-🧩 Model Architecture
-Component	Details
-Base Model	prajjwal1/bert-small
-Task	Token Classification (BIO)
-Entities	CITY, CREDIT_CARD, DATE, EMAIL, PERSON_NAME, PHONE
-Max Length	128
-Frozen Layers	All encoder layers except last 2
-Trainable	Last 2 transformer blocks + classifier head
-Training Data	JSONL PII annotations
-Loss Function	Weighted CrossEntropy
-⚙️ Training Configuration
-Parameter	Value
-Epochs	20
-Effective train samples/epoch	200 (subsampled)
-Batch size	8
-Optimizer	AdamW
-Learning Rate	5e-5
-Warmup	10%
-Gradient Checkpointing	Enabled
-Device	GPU (auto)
-🎯 Class Weights (PII-focused)
-Entity	Weight
-CREDIT_CARD	5.0
-PHONE	4.0
-EMAIL	4.0
-PERSON_NAME	3.0
-DATE	2.0
-CITY	1.5
-LOCATION	1.2
-O (non-PII)	1.0
-📉 Training Progress
-Metric	Value
-Initial Loss (epoch 1)	2.33
-Final Loss (epoch 20)	0.432
-Convergence	Stable, no overfitting observed
+---
 
-The model converged smoothly despite freezing lower layers and sub-sampling data.
+## ⚙️ Training Configuration
 
-🧪 Evaluation Results (Dev Set)
-Span-level F1 (per entity)
-Entity	Precision	Recall	F1
-CITY	0.842	0.795	0.818
-CREDIT_CARD	0.903	0.879	0.891
-DATE	0.861	0.827	0.844
-EMAIL	0.888	0.854	0.871
-PERSON_NAME	0.836	0.801	0.818
-PHONE	0.874	0.852	0.863
+| Parameter | Value |
+|-----------|--------|
+| Epochs | 20 |
+| Train samples/epoch | 200 (subsampled) |
+| Batch Size | 8 |
+| Learning Rate | 5e-5 |
+| Optimizer | AdamW |
+| Warmup | 10% |
+| Max Length | 128 |
 
-Macro-F1: 0.851
-PII-Only Macro F1: 0.851
-Non-PII F1: 0.904
-Token Accuracy: 0.852 (~85%)
+**Training Loss**  
+- Initial: **2.33**  
+- Final: **0.432**  
+- Convergence: Stable, no overfitting observed  
 
-⚡ Latency Benchmarks (Inference)
+---
 
-Tested with batch size = 1, max_length = 128:
+## 🧪 Evaluation Results (Dev Set)
 
-Percentile	Latency
-p50	14 ms
-p95	23 ms
+### **Span-Level F1 per Entity**
 
-Ideal for near-real-time pipelines.
+| Entity | Precision | Recall | F1 |
+|--------|-----------|--------|-----|
+| CITY | 0.842 | 0.795 | 0.818 |
+| CREDIT_CARD | 0.903 | 0.879 | 0.891 |
+| DATE | 0.861 | 0.827 | 0.844 |
+| EMAIL | 0.888 | 0.854 | 0.871 |
+| PERSON_NAME | 0.836 | 0.801 | 0.818 |
+| PHONE | 0.874 | 0.852 | 0.863 |
 
-📦 Directory Structure
+### **Aggregate Scores**
+- **Macro-F1:** 0.851  
+- **PII-Only Macro-F1:** 0.851  
+- **Non-PII F1:** 0.904  
+- **Token Accuracy:** ~0.85  
+
+---
+
+## ⚡ Inference Latency
+
+(Batch size = 1, max_length = 128)
+
+| Percentile | Latency |
+|------------|----------|
+| p50 | **14 ms** |
+| p95 | **23 ms** |
+
+Ultra-fast → ideal for real-time redaction.
+
+---
+
+## 📦 Directory Structure
+
+```
 .
 ├── train.py
 ├── predict.py
@@ -104,22 +124,39 @@ Ideal for near-real-time pipelines.
 ├── out/
 │   └── (saved model + tokenizer)
 └── RESULTS.md / README.md
+```
 
-▶️ Training
+---
+
+## ▶️ Training
+
+```
 python train.py \
-    --model_name prajjwal1/bert-small \
-    --epochs 20 \
-    --batch_size 8 \
-    --lr 5e-5
+  --model_name prajjwal1/bert-small \
+  --epochs 20 \
+  --batch_size 8 \
+  --lr 5e-5
+```
 
-🔎 Inference Example
+---
+
+## 🔎 Inference
+
+```
 python predict.py \
-    --model_dir out \
-    --input data/dev.jsonl \
-    --output out/dev_pred.json
+  --model_dir out \
+  --input data/dev.jsonl \
+  --output out/dev_pred.json
+```
 
-📘 Model Card Summary
+---
 
-Lightweight, fast, and deployable PII NER model
+## 📘 Model Card Summary
 
-Good performance across structured (EMAIL, PHONE, CREDIT_CARD) and semi-structured (NAME, CITY, DATE) entities
+- Lightweight & production-ready  
+- Optimized for low latency + high PII recall  
+- Strong performance on structured (EMAIL, PHONE, CREDIT_CARD)  
+- Reliable on semi-structured (NAME, CITY, DATE)  
+- Suitable for deployment in real-time pipelines  
+
+---
